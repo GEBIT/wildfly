@@ -38,6 +38,11 @@ vi:ts=4:sw=4:expandtab
 
     <name>JBoss Application Server: EJB Subsystem</name>
 
+	<properties>
+ 		<maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+	</properties>
+    
     <build>
         <plugins>
             <plugin>
