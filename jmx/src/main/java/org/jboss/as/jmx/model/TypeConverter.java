@@ -721,7 +721,16 @@ public abstract class TypeConverter {
                 final Map<String, Object> items = new HashMap<String, Object>();
                 for (String attrName : compositeType.keySet()) {
                     TypeConverter converter = getConverter(typeNode.get(attrName, TYPE), typeNode.get(attrName, VALUE_TYPE));
-                    items.put(attrName, converter.fromModelNode(node.get(attrName)));
+                    if (node.getType() == ModelType.PROPERTY) {
+                     // Ugly fix for InvalidArgumentException otherwise thrown with properties here
+                        if ("name".equals(attrName)) {
+                            items.put(attrName, node.asProperty().getName());
+                        } else if ("value".equals(attrName)) {
+                            items.put(attrName, converter.fromModelNode(node.asProperty().getValue()));
+                        }
+                    } else {
+                        items.put(attrName, converter.fromModelNode(node.get(attrName)));
+                    }
                 }
 
                 try {
