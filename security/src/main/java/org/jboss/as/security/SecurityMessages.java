@@ -30,6 +30,7 @@ import javax.security.auth.login.LoginException;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.server.services.security.VaultReaderException;
 import org.jboss.logging.Cause;
 import org.jboss.logging.Message;
@@ -280,5 +281,19 @@ public interface SecurityMessages {
      */
     @Message(id = 13327, value = "Failure calling CallbackHandler '%s'")
     LoginException failureCallingSecurityRealm(String cause);
+
+    /**
+     * Create a OperationFailedException to indicate a failure to find an authentication cache
+     * @return the exception
+     */
+    @Message(id = 13328, value = "No authentication cache for security domain '%s' available")
+    OperationFailedException noAuthenticationCacheAvailable(String securityDomain);
+
+    /**
+     * Create an IllegalStateFoundException to indicate no UserPrincipal was found on the underlying connection.
+     * @return the exception
+     */
+    @Message(id= 13329, value = "No UserPrincipalFound constructing RemotingConnectionPrincipal.")
+    IllegalStateException noUserPrincipalFound();
 
 }

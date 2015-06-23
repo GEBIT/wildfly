@@ -230,7 +230,7 @@ public class SimpleSecurityManager implements ServerSecurityManager {
      * @param runAsPrincipal
      * @param extraRoles
      */
-    public void push(final String securityDomain, final String runAs, final String runAsPrincipal, final Set<String> extraRoles) {
+    public void push(final String securityDomain) {
         // TODO - Handle a null securityDomain here? Yes I think so.
         final SecurityContext previous = SecurityContextAssociation.getSecurityContext();
         contexts.push(previous);
@@ -249,7 +249,6 @@ public class SimpleSecurityManager implements ServerSecurityManager {
              * if we don't already have a trusted identity - this allows for beans to reauthenticate as a
              * different identity.
              */
-            boolean authenticated = false;
             if (RemotingContext.isSet()) {
                 // In this case the principal and credential will not have been set to set some random values.
                 SecurityContextUtil util = current.getUtil();
@@ -286,23 +285,6 @@ public class SimpleSecurityManager implements ServerSecurityManager {
 
                 util.createSubjectInfo(p, credential, subject);
             }
-
-            // If we have a trusted identity no need for a re-auth.
-            if (authenticated == false) {
-                authenticated = authenticate(current, null);
-            }
-            if (authenticated == false) {
-                // TODO - Better type needed.
-                throw SecurityMessages.MESSAGES.invalidUserException();
-            }
-        }
-
-        if (runAs != null) {
-            RunAs runAsIdentity = new RunAsIdentity(runAs, runAsPrincipal, extraRoles);
-            current.setOutgoingRunAs(runAsIdentity);
-        } else if (previous != null && previous.getOutgoingRunAs() != null) {
-            // Ensure the propagation continues.
-            current.setOutgoingRunAs(previous.getOutgoingRunAs());
         }
     }
 
@@ -321,14 +303,34 @@ public class SimpleSecurityManager implements ServerSecurityManager {
         if (trusted == false) {
             SecurityContextUtil util = current.getUtil();
             util.createSubjectInfo(new SimplePrincipal(userName), new String(password), subject);
-            if (authenticate(current, subject) == false) {
-                throw SecurityMessages.MESSAGES.invalidUserException();
-            }
+        }
+    }
+
+    public void authenticate() {
+        authenticate(null, null, null);
+    }
+
+    public void authenticate(final String runAs, final String runAsPrincipal,
+        final Set<String> extraRoles) {
+        SecurityContext context = SecurityContextAssociation
+            .getSecurityContext();
+        SecurityContextUtil util = context.getUtil();
+
+        Object credential = util.getCredential();
+        Subject subject = null;
+
+        if (authenticate(context, subject) == false) {
+            throw SecurityMessages.MESSAGES.invalidUserException();
         }
 
-        if (previous != null && previous.getOutgoingRunAs() != null) {
+        SecurityContext previous = contexts.peek();
+        if (runAs != null) {
+            RunAs runAsIdentity = new RunAsIdentity(runAs, runAsPrincipal,
+                extraRoles);
+            context.setOutgoingRunAs(runAsIdentity);
+        } else if (previous != null && previous.getOutgoingRunAs() != null) {
             // Ensure the propagation continues.
-            current.setOutgoingRunAs(previous.getOutgoingRunAs());
+            context.setOutgoingRunAs(previous.getOutgoingRunAs());
         }
     }
 
